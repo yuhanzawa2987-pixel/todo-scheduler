@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <h2>TODOタイマー v0.5</h2>
+  <h2>やることリスト</h2>
 
 <h3>タスク追加</h3>
 <input type="text" id="newTitle" placeholder="タスク名">
@@ -134,12 +134,12 @@ function createTask(task, save = true) {
         startBtn.textContent = "開始";
         remaining = task.minutes * 60;
         updateDisplay();
+        new Audio("sounds/alarm_timer.mp3").play();
         if(Notification.permission === "granted"){
           new Notification("タイマー終了", {
           body: task.title + " のタイマーが終了しました！"
           });
         }
-        new Audio("sounds/alarm_timer.mp3").play();
         return;
       }
       remaining--;
@@ -258,11 +258,11 @@ document.getElementById("importJson").addEventListener("click", () => {
          importedTask.id = crypto.randomUUID();
       }
       createTask(importedTask);
-      new Audio("sounds/alarm_addJSON.mp3").play();
+      new Audio("sounds/alarm_add.mp3").play();
     });
   } catch(e) {
-    alert("JSONの形式が正しくありません");
     new Audio("sounds/alarm_bad.mp3").play();
+    alert("JSONの形式が正しくありません");
   }
 });
 
