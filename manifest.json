@@ -1,0 +1,16 @@
+{
+    "name": "TODO Scheduler",
+    "short_name": "Scheduler",
+    "start_url": "./index.html",
+    "version": "1.0",
+    "description": "A simple task scheduler with audio feedback.",
+    "icons": [
+        {
+            "src": "icon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        }
+    ],
+    "author": "Yuko Hanzawa",
+    "license": "MIT"
+}
