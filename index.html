@@ -6,33 +6,47 @@
   <title>TODO SCHEDULER v1.0</title>
   <style>
     body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
-    .task { padding: 10px; border: 1px solid #ccc; margin-bottom: 10px; }
+    .task { padding: 12px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 10px; }
+    .task span{ font-size: 18px; }
     .doing { background-color: #fffae6; }
     .done { background-color: #ddd; text-decoration: line-through; }
     button { margin-left: 5px; padding: 8px 12px;}
     input { font-size: 16px;}
+    #inputArea { 
+      position: fixed; 
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+     }
   </style>
 </head>
 <body>
   <h2>やることリスト</h2>
-
-<h3>タスク追加</h3>
-<input type="text" id="newTitle" placeholder="タスク名">
-<input type="number" id="newMinutes" placeholder="分" min="1">
-<button id="addTask">追加</button>
-<textarea id="jsonInput" rows="10" cols="50">
-[
-  {"title":"皿洗い","minutes":10},
-  {"title":"朝ごはん","minutes":15}
-]
-</textarea>
-<button id="importJson">読み込み</button>
 <br>
-<div id="estTotalTime">今日の予定作業時間: 0分</div><div id="realTotalTime">今日の実質作業時間: 0分</div>
+
+<textarea id="jsonInput" rows="3" placeholder="JSON"></textarea>
+<br>
+<button id="importJson">読み込み</button><br>
+<!--textarea id="aiGenerate" rows="3" placeholder="例：今日は疲れてる、皿洗いと子供の宿題をみて21時に終わらせたい"></textarea>
+<br>
+<button id="aiGenerateBtn">タスク作成</button><br-->
+<!--div id="estTotalTime">今日の予定作業時間: 0分</div><div id="realTotalTime">今日の実質作業時間: 0分</div-->
 <button id="clearAll">全削除</button>
 
 <hr>
+
 <div id="taskList"></div>
+
+
+
+<div id="inputArea">
+<input type="text" id="newTitle" placeholder="タスク名">
+<input type="number" id="newMinutes" placeholder="分" min="1">
+<button id="addTask">追加</button>
+</div>
 
 <script>
 
@@ -71,10 +85,10 @@ function createTask(task, save = true) {
 
   taskDiv.innerHTML = `
     <input type="checkbox">
-    <span>${task.title}（${task.minutes}分）</span>
-    <button>開始</button>
-    <button>完了</button>　
-    <button>削除</button>
+    <span>${formatTitle(task.title)}（${task.minutes}分）</span>
+    <button>▶</button>
+    <button>✓</button>　
+    <button>×</button>
     <span>0:00</span>
   `;
 
@@ -135,11 +149,11 @@ function createTask(task, save = true) {
         remaining = task.minutes * 60;
         updateDisplay();
         new Audio("sounds/alarm_timer.mp3").play();
-        if(Notification.permission === "granted"){
-          new Notification("タイマー終了", {
-          body: task.title + " のタイマーが終了しました！"
-          });
-        }
+        // if(Notification.permission === "granted"){
+        //   new Notification("タイマー終了", {
+        //   body: task.title + " のタイマーが終了しました！"
+        //   });
+        // }
         return;
       }
       remaining--;
@@ -238,6 +252,15 @@ function saveTasks(){
   localStorage.setItem("myTasks", JSON.stringify(tasks));
 }
 
+//時間の色を変える関数
+function formatTitle(title){
+  const match = title.match(/^(\d{1,2}:\d{2})\s*(.*)/);
+  if(match){
+    return `<strong>${match[1]}</strong> ${match[2]}`;
+  }
+  return title;
+}
+
 //全削除ボタン
 document.getElementById("clearAll").addEventListener("click", () => {
   localStorage.removeItem("myTasks");
@@ -261,7 +284,6 @@ document.getElementById("importJson").addEventListener("click", () => {
       new Audio("sounds/alarm_add.mp3").play();
     });
   } catch(e) {
-    new Audio("sounds/alarm_bad.mp3").play();
     alert("JSONの形式が正しくありません");
   }
 });
