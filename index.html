@@ -23,6 +23,9 @@
      }
   </style>
 </head>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js">
+
+</script>
 <body>
   <h2>やることリスト</h2>
 <br>
@@ -49,6 +52,10 @@
 </div>
 
 <script>
+  new Sortable(document.getElementById("taskList"), {
+    animation: 150,
+    handle: ".handle"
+  });
 
 let tasks = [];
 const taskList = document.getElementById("taskList");
@@ -90,6 +97,7 @@ function createTask(task, save = true) {
     <button>✓</button>　
     <button>×</button>
     <span>0:00</span>
+    <span class="handle">☰</span>
   `;
 
   const checkbox = taskDiv.querySelector("input");
