@@ -5,14 +5,14 @@
   <link rel="manifest" href="manifest.json">
   <title>TODO SCHEDULER v1.0</title>
   <style>
-    body { font-family: sans-serif; margin:0; padding: 0px; max-width: 500px; }
-    .task { padding-bottom: 60px; padding: 5px; border-radius: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 5px; display:flex; align-items: center;}
-    .tasktitle{ padding: 5px;font-size: 16px; flex:1; white-space:nowrap; overflow:hidden; text-overflow: ellipsis; max-width: 200px;font-weight: bold;}
+    body { font-family: sans-serif; margin:0; padding: 0px; padding-bottom: 60px;max-width: 500px; }
+    .task { margin-left: 5px; padding: 5px; border-radius: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display:flex; align-items: center;}
+    .tasktitle{ padding: 0px 5px 5px 5px;font-size: 16px; flex:1; white-space:nowrap; overflow:hidden; text-overflow: ellipsis; max-width: 200px;font-weight: bold;}
     .tasktitleminute{ font-size: 16px; font-weight: bold;}
     .right { display: flex; gap: 8px;margin-left: auto; align-items: center;}
     .taskbtn{ font-size: 15px; color: #fff; margin-left: 5px; padding:5px 8px; border-radius: 5px; background-color: #ff3f3f;cursor: pointer;}
     .handlebtn{ font-size: 20px;  margin-left: 5px; padding:8px 12px; border-radius: 5px; cursor: pointer; margin-left: auto;font-weight: bold;}
-    .doing { background-color: #ff9c9c; }
+    .doing { border-left:20px solid #ff3f3f;}
     .done { background-color: #ddd;}
     .donetitle {  text-decoration: line-through; }
     .donebtn { font-size: 15px; color: #fff; margin-left: 5px; padding:5px 8px; border-radius: 5px; background-color: #ccc;cursor: pointer;}
@@ -26,6 +26,7 @@
       background: white;
       padding: 10px;
       border-top: 1px solid #ccc;
+      height: 40px;
      }
   </style>
 </head>
@@ -43,17 +44,17 @@
 <br>
 <button id="aiGenerateBtn">タスク作成</button><br>
 <div id="estTotalTime">今日の予定作業時間: 0分</div><div id="realTotalTime">今日の実質作業時間: 0分</div-->
-<button id="clearAll">全削除</button>
+<!--button id="clearAll">全削除</button-->
 
 <hr>
 
-<div id="taskList"></div>
+<div id="taskList" style=" padding-bottom: 70px;"></div>
 
 
 
-<div id="inputArea" style="text-align: center;">
+<div id="inputArea">
 <input type="text" id="newTitle" placeholder="タスク名">
-<input type="number" id="newMinutes" placeholder="分" min="1" style="width: 80px;">
+<input type="number" id="newMinutes" placeholder="分" min="1" style="width: 50px;">
 <span id="addTask" class="taskbtn">追加</span>
 </div>
 
@@ -188,6 +189,8 @@ function createTask(task, save = true) {
         updateDisplay();
         timerSpan.textContent = "▶" + timerSpan.textContent;
         new Audio("sounds/alarm_timer.mp3").play();
+        const now = new Date();
+        alert(now + "に" + task.title + " のタイマーが終了しました！");
         // if(Notification.permission === "granted"){
         //   new Notification("タイマー終了", {
         //   body: task.title + " のタイマーが終了しました！"
@@ -307,14 +310,14 @@ function formatTitle(title){
 }
 
 //全削除ボタン
-document.getElementById("clearAll").addEventListener("click", () => {
-  localStorage.removeItem("myTasks");
-  tasks.length = 0;
-  taskList.innerHTML = "";
- // updateTotalTime();
- // updateRealTotalTime();
-  new Audio("sounds/alarm_allReset.mp3").play();
-});
+// document.getElementById("clearAll").addEventListener("click", () => {
+//   localStorage.removeItem("myTasks");
+//   tasks.length = 0;
+//   taskList.innerHTML = "";
+//  // updateTotalTime();
+//  // updateRealTotalTime();
+//   new Audio("sounds/alarm_allReset.mp3").play();
+// });
 
 // JSON読み込み
 // document.getElementById("importJson").addEventListener("click", () => {
