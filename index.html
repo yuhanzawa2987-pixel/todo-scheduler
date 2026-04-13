@@ -1,16 +1,22 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
+<html lang="ja" style="margin:0; padding:0;">
+<head style="margin:0; padding:0;">
   <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
   <link rel="manifest" href="manifest.json">
   <title>TODO SCHEDULER v1.0</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
-    .task { padding: 12px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 10px; }
-    .task span{ font-size: 18px; }
-    .doing { background-color: #fffae6; }
-    .done { background-color: #ddd; text-decoration: line-through; }
-    button { margin-left: 5px; padding: 8px 12px;}
+    body { font-family: sans-serif; margin:0; padding: 0px; max-width: 500px; }
+    .task { padding-bottom: 60px; padding: 5px; border-radius: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 5px; display:flex; align-items: center;}
+    .tasktitle{ padding: 5px;font-size: 16px; flex:1; white-space:nowrap; overflow:hidden; text-overflow: ellipsis; max-width: 200px;font-weight: bold;}
+    .tasktitleminute{ font-size: 16px; font-weight: bold;width: 50px;}
+    .right { display: flex; gap: 8px;margin-left: auto; align-items: center;}
+    .taskbtn{ font-size: 15px; color: #fff; margin-left: 5px; padding:5px 8px; border-radius: 5px; background-color: #ff3f3f;cursor: pointer;}
+    .handlebtn{ font-size: 20px;  margin-left: 5px; padding:8px 12px; border-radius: 5px; cursor: pointer; margin-left: auto;font-weight: bold;}
+    .doing { background-color: #ff9c9c; }
+    .done { background-color: #ddd;}
+    .donetitle {  text-decoration: line-through; }
+    .donebtn { font-size: 15px; color: #fff; margin-left: 5px; padding:5px 8px; border-radius: 5px; background-color: #ccc;cursor: pointer;}
+    button { margin-left: 1px; padding: 5px 5px;}
     input { font-size: 16px;}
     #inputArea { 
       position: fixed; 
@@ -26,17 +32,17 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js">
 
 </script>
-<body>
-  <h2>やることリスト</h2>
+<body style="margin:0;padding:0px;">
+  <h2 style="margin:0;padding:10px; color:white;background-color: #ff3f3f;">今日のタスク</h2>
 <br>
 
-<textarea id="jsonInput" rows="3" placeholder="JSON"></textarea>
+<!--textarea id="jsonInput" rows="3" placeholder="JSON"></textarea>
 <br>
 <button id="importJson">読み込み</button><br>
-<!--textarea id="aiGenerate" rows="3" placeholder="例：今日は疲れてる、皿洗いと子供の宿題をみて21時に終わらせたい"></textarea>
+<textarea id="aiGenerate" rows="3" placeholder="例：今日は疲れてる、皿洗いと子供の宿題をみて21時に終わらせたい"></textarea>
 <br>
-<button id="aiGenerateBtn">タスク作成</button><br-->
-<div id="estTotalTime">今日の予定作業時間: 0分</div><div id="realTotalTime">今日の実質作業時間: 0分</div>
+<button id="aiGenerateBtn">タスク作成</button><br>
+<div id="estTotalTime">今日の予定作業時間: 0分</div><div id="realTotalTime">今日の実質作業時間: 0分</div-->
 <button id="clearAll">全削除</button>
 
 <hr>
@@ -45,10 +51,10 @@
 
 
 
-<div id="inputArea">
+<div id="inputArea" style="text-align: center;">
 <input type="text" id="newTitle" placeholder="タスク名">
-<input type="number" id="newMinutes" placeholder="分" min="1">
-<button id="addTask">追加</button>
+<input type="number" id="newMinutes" placeholder="分" min="1" style="width: 80px;">
+<span id="addTask" class="taskbtn">追加</span>
 </div>
 
 <script>
@@ -92,27 +98,42 @@ function createTask(task, save = true) {
 
   taskDiv.innerHTML = `
     <input type="checkbox">
-    <span>${formatTitle(task.title)}（${task.minutes}分）</span>
-    <button>▶</button>
-    <button>✓</button>　
-    <button>×</button>
-    <span>0:00</span>
-    <span class="handle">☰</span>
+    <span class="tasktitle">${formatTitle(task.title)}</span>
+    <div class="right">
+    <span class="tasktitleminute">（${task.minutes}分）</span>
+    <span class="taskbtn">×</span>
+    <span class="taskbtn">▶0:00</span>
+    <span class="handle handlebtn">☰</span>
+    </div>
   `;
 
   const checkbox = taskDiv.querySelector("input");
-  const startBtn = taskDiv.querySelectorAll("button")[0];
-  const completeBtn = taskDiv.querySelectorAll("button")[1];
-  const deleteBtn = taskDiv.querySelectorAll("button")[2];
-  const timerSpan = taskDiv.querySelectorAll("span")[1];
+  //const startBtn = taskDiv.querySelectorAll("button")[0];
+  //const completeBtn = taskDiv.querySelectorAll("button")[1];
+  const taskTitle = taskDiv.querySelectorAll("span")[0];
+  const taskTitleminute = taskDiv.querySelectorAll("span")[1];
+  const deleteBtn = taskDiv.querySelectorAll("span")[2];
+  const timerSpan = taskDiv.querySelectorAll("span")[3];
 
+  //doneの表示処理
+  function updateDoneDisplay( ){
+    if(task.done){
+      taskDiv.classList.add("done");
+      taskTitle.classList.add("donetitle");
+      taskTitleminute.classList.add("donetitle");
+      deleteBtn.classList.add("donebtn");
+      timerSpan.classList.add("donebtn");
+    } else {
+      taskDiv.classList.remove("done");
+      taskTitle.classList.remove("donetitle");
+      taskTitleminute.classList.remove("donetitle");
+      deleteBtn.classList.remove("donebtn");
+      timerSpan.classList.remove("donebtn");
+    }
+  }
   //チェックボックス読み込み処理
   checkbox.checked = task.done;
-  if(task.done){
-    taskDiv.classList.add("done");
-  } else {
-    taskDiv.classList.remove("done");
-  }
+  updateDoneDisplay();
 
   // 削除ボタン処理
   deleteBtn.addEventListener("click", () => {
@@ -134,17 +155,27 @@ function createTask(task, save = true) {
   }
 
   //開始ボタン処理
-  startBtn.addEventListener("click", () => {
+  timerSpan.addEventListener("click", () => {
+    
+    const min = Math.floor(remaining / 60);
+    const sec = remaining % 60;
+
+    if(task.done) {
+      return;
+    }
+
     if(timer) {
       clearInterval(timer);
       timer = null;
-      startBtn.textContent = "開始";
+      updateDisplay();
+      timerSpan.textContent = "▶" + timerSpan.textContent;
       taskDiv.classList.remove("doing");
       return;
     }
 
     taskDiv.classList.add("doing");
-    startBtn.textContent = "停止";
+      updateDisplay();
+      timerSpan.textContent = "▶" + timerSpan.textContent;
 
     timer = setInterval(() => {
       if(remaining <= 0) {
@@ -153,9 +184,9 @@ function createTask(task, save = true) {
         taskDiv.classList.remove("doing");
         //taskDiv.classList.add("done");
         //checkbox.checked = true;
-        startBtn.textContent = "開始";
         remaining = task.minutes * 60;
         updateDisplay();
+        timerSpan.textContent = "▶" + timerSpan.textContent;
         new Audio("sounds/alarm_timer.mp3").play();
         // if(Notification.permission === "granted"){
         //   new Notification("タイマー終了", {
@@ -166,10 +197,12 @@ function createTask(task, save = true) {
       }
       remaining--;
       updateDisplay();
+      timerSpan.textContent = "■" + timerSpan.textContent;
     }, 1000);
   });
 
   //完了ボタン処理
+  /*
   completeBtn.addEventListener("click", () => {
     clearInterval(timer);
     timer = null;
@@ -179,26 +212,29 @@ function createTask(task, save = true) {
     checkbox.checked = true;
     task.done = true;
     saveTasks();
-    startBtn.textContent = "開始";
+    timerSpan.textContent = "▶" + remaining;
     updateDisplay();
     new Audio("sounds/alarm_done.mp3").play();
   });
+*/
+
+
 
   //チェックボックス処理
   checkbox.addEventListener("change", () => {
     task.done = checkbox.checked;
+    updateDoneDisplay();
     if(task.done){
       clearInterval(timer);
       timer = null;
       remaining = 0;
-      taskDiv.classList.add("done");
       new Audio("sounds/alarm_done.mp3").play();
     } else {
       remaining = task.minutes * 60;
-      taskDiv.classList.remove("done");
       new Audio("sounds/alarm_canceled.mp3").play();
     }
     updateDisplay();
+    timerSpan.textContent = "▶" + timerSpan.textContent;
     saveTasks();   // ← 超重要
   });
 
@@ -222,6 +258,7 @@ function createTask(task, save = true) {
   });
 
   updateDisplay();
+  timerSpan.textContent = "▶" + timerSpan.textContent;
   taskList.appendChild(taskDiv);
 }
 
@@ -255,8 +292,8 @@ function updateTaskOrder(){
 
 //保存関数
 function saveTasks(){
-  updateTotalTime();
-  updateRealTotalTime();
+//  updateTotalTime();
+//  updateRealTotalTime();
   localStorage.setItem("myTasks", JSON.stringify(tasks));
 }
 
@@ -274,38 +311,39 @@ document.getElementById("clearAll").addEventListener("click", () => {
   localStorage.removeItem("myTasks");
   tasks.length = 0;
   taskList.innerHTML = "";
-  updateTotalTime();
-  updateRealTotalTime();
+ // updateTotalTime();
+ // updateRealTotalTime();
   new Audio("sounds/alarm_allReset.mp3").play();
 });
 
 // JSON読み込み
-document.getElementById("importJson").addEventListener("click", () => {
-  const text = document.getElementById("jsonInput").value;
-  try {
-    const importedTask = JSON.parse(text);
-    importedTask.forEach(importedTask => {
-      if(!importedTask.id){
-         importedTask.id = crypto.randomUUID();
-      }
-      createTask(importedTask);
-      new Audio("sounds/alarm_add.mp3").play();
-    });
-  } catch(e) {
-    alert("JSONの形式が正しくありません");
-  }
-});
+// document.getElementById("importJson").addEventListener("click", () => {
+//   const text = document.getElementById("jsonInput").value;
+//   try {
+//     const importedTask = JSON.parse(text);
+//     importedTask.forEach(importedTask => {
+//       if(!importedTask.id){
+//          importedTask.id = crypto.randomUUID();
+//       }
+//       createTask(importedTask);
+//       new Audio("sounds/alarm_add.mp3").play();
+//     });
+//   } catch(e) {
+//     alert("JSONの形式が正しくありません");
+//   }
+// });
 
 //タスクの合計時間表示
-function updateTotalTime(){
+/*function updateTotalTime(){
   let total = 0;
   tasks.forEach(task => {
     total += task.minutes;
   });
   document.getElementById("estTotalTime").textContent = `今日の予定作業時間: ${total}分`;
-}
+}*/
 
 //実質的な作業時間の表示
+/*
 function updateRealTotalTime(){
   let total = 0;
   tasks.forEach(task => {
@@ -315,7 +353,7 @@ function updateRealTotalTime(){
   });
   document.getElementById("realTotalTime").textContent = `今日の実質作業時間: ${total}分`;
 }
-
+*/
 
 
 //ページ読み込み時に復元（一番下に書くように）
