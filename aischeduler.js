@@ -1,22 +1,341 @@
-async function askAI() {
-  const mood = document.getElementById("mood").value;
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="manifest.json">
+  <title>TODO SCHEDULER v1.0</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+    .task { padding: 12px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 10px; }
+    .task span{ font-size: 18px; }
+    .doing { background-color: #fffae6; }
+    .done { background-color: #ddd; text-decoration: line-through; }
+    button { margin-left: 5px; padding: 8px 12px;}
+    input { font-size: 16px;}
+    #inputArea { 
+      position: fixed; 
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+     }
+  </style>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js">
+  new Sortable(document.getElementById("taskList"), {
+    animation: 150,
+    onEnd: function (evt) {
+      const item = tasks.splice(evt.oldIndex, 1)[0];
+      tasks.splice(evt.newIndex, 0, item);
+      saveTasks();
+    }
+  });
+</script>
+<body>
+  <h2>やることリスト</h2>
+<br>
 
-  const response = await fetch("/api/ask", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ mood })
+<textarea id="jsonInput" rows="3" placeholder="JSON"></textarea>
+<br>
+<button id="importJson">読み込み</button><br>
+<!--textarea id="aiGenerate" rows="3" placeholder="例：今日は疲れてる、皿洗いと子供の宿題をみて21時に終わらせたい"></textarea>
+<br>
+<button id="aiGenerateBtn">タスク作成</button><br-->
+<div id="estTotalTime">今日の予定作業時間: 0分</div><div id="realTotalTime">今日の実質作業時間: 0分</div>
+<button id="clearAll">全削除</button>
+
+<hr>
+
+<div id="taskList"></div>
+
+
+
+<div id="inputArea">
+<input type="text" id="newTitle" placeholder="タスク名">
+<input type="number" id="newMinutes" placeholder="分" min="1">
+<button id="addTask">追加</button>
+</div>
+
+<script>
+
+let tasks = [];
+const taskList = document.getElementById("taskList");
+const addBtn = document.getElementById("addTask");
+
+addBtn.addEventListener("click", () => {
+  const title = document.getElementById("newTitle").value;
+  const minutes = parseInt(document.getElementById("newMinutes").value);
+
+  if(!title || !minutes) return;
+
+  createTask({id: crypto.randomUUID(), title, minutes, done:false});
+  
+ new Audio("sounds/alarm_add.mp3").play();
+});
+
+
+//タスク作成
+function createTask(task, save = true) {
+  
+  if(save){
+    tasks.push(task);
+    saveTasks();
+  }
+
+  const taskDiv = document.createElement("div");
+  taskDiv.className = "task";
+  taskDiv.dataset.id = task.id;
+  taskDiv.setAttribute("draggable", "true");
+
+  const duration = task.minutes * 60;
+  let remaining = duration;
+  let timer = null;
+
+  taskDiv.innerHTML = `
+    <input type="checkbox">
+    <span>${formatTitle(task.title)}（${task.minutes}分）</span>
+    <button>▶</button>
+    <button>✓</button>　
+    <button>×</button>
+    <span>0:00</span>
+  `;
+
+  const checkbox = taskDiv.querySelector("input");
+  const startBtn = taskDiv.querySelectorAll("button")[0];
+  const completeBtn = taskDiv.querySelectorAll("button")[1];
+  const deleteBtn = taskDiv.querySelectorAll("button")[2];
+  const timerSpan = taskDiv.querySelectorAll("span")[1];
+
+  //チェックボックス読み込み処理
+  checkbox.checked = task.done;
+  if(task.done){
+    taskDiv.classList.add("done");
+  } else {
+    taskDiv.classList.remove("done");
+  }
+
+  // 削除ボタン処理
+  deleteBtn.addEventListener("click", () => {
+    taskDiv.remove();
+    const index = tasks.indexOf(task);
+
+    if (index !== -1) {
+      tasks.splice(index, 1);
+    }
+    saveTasks();
+    new Audio("sounds/alarm_reset.mp3").play();
   });
 
-  const data = await response.json();
+  //時間表示処理
+  function updateDisplay() {
+    const min = Math.floor(remaining / 60);
+    const sec = remaining % 60;
+    timerSpan.textContent = `${min}:${sec.toString().padStart(2,"0")}`;
+  }
 
-  const ul = document.getElementById("result");
-  ul.innerHTML = "";
+  //開始ボタン処理
+  startBtn.addEventListener("click", () => {
+    if(timer) {
+      clearInterval(timer);
+      timer = null;
+      startBtn.textContent = "開始";
+      taskDiv.classList.remove("doing");
+      return;
+    }
 
-  data.tasks.forEach(task => {
-    const li = document.createElement("li");
-    li.textContent = task;
-    ul.appendChild(li);
+    taskDiv.classList.add("doing");
+    startBtn.textContent = "停止";
+
+    timer = setInterval(() => {
+      if(remaining <= 0) {
+        clearInterval(timer);
+        timer = null;
+        taskDiv.classList.remove("doing");
+        //taskDiv.classList.add("done");
+        //checkbox.checked = true;
+        startBtn.textContent = "開始";
+        remaining = task.minutes * 60;
+        updateDisplay();
+        new Audio("sounds/alarm_timer.mp3").play();
+        // if(Notification.permission === "granted"){
+        //   new Notification("タイマー終了", {
+        //   body: task.title + " のタイマーが終了しました！"
+        //   });
+        // }
+        return;
+      }
+      remaining--;
+      updateDisplay();
+    }, 1000);
   });
+
+  //完了ボタン処理
+  completeBtn.addEventListener("click", () => {
+    clearInterval(timer);
+    timer = null;
+    remaining = 0;
+    taskDiv.classList.remove("doing");
+    taskDiv.classList.add("done");
+    checkbox.checked = true;
+    task.done = true;
+    saveTasks();
+    startBtn.textContent = "開始";
+    updateDisplay();
+    new Audio("sounds/alarm_done.mp3").play();
+  });
+
+  //チェックボックス処理
+  checkbox.addEventListener("change", () => {
+    task.done = checkbox.checked;
+    if(task.done){
+      clearInterval(timer);
+      timer = null;
+      remaining = 0;
+      taskDiv.classList.add("done");
+      new Audio("sounds/alarm_done.mp3").play();
+    } else {
+      remaining = task.minutes * 60;
+      taskDiv.classList.remove("done");
+      new Audio("sounds/alarm_canceled.mp3").play();
+    }
+    updateDisplay();
+    saveTasks();   // ← 超重要
+  });
+
+  //ドラッグ処理
+  taskDiv.addEventListener("dragstart", () => {
+    taskDiv.classList.add("dragging");
+  });
+  taskDiv.addEventListener("dragend", () => {
+    taskDiv.classList.remove("dragging");
+    updateTaskOrder();
+  });
+  taskList.addEventListener("dragover", e => {
+    e.preventDefault();
+    const dragging = document.querySelector(".dragging");
+    const afterElement = getDragAfterElement(taskList, e.clientY);
+    if(afterElement == null){
+      taskList.appendChild(dragging);
+    } else {
+      taskList.insertBefore(dragging, afterElement);
+    }
+  });
+
+  updateDisplay();
+  taskList.appendChild(taskDiv);
 }
 
+//ドラッグ時のエレメント取得
+function getDragAfterElement(container, y){
+  const elements =[...container.querySelectorAll(".task:not(.dragging)")];
+  return elements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if(offset < 0 && offset > closest.offset){
+      return { offset: offset, element: child };
+    } else{
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+//並び替え時DOMの順番をtasks配列に反映
+function updateTaskOrder(){
+  const newOrder = [];
+  const taskDivs = document.querySelectorAll(".task");
+
+  taskDivs.forEach(div => {
+    const id = div.dataset.id;
+    const task = tasks.find(t => t.id === id);
+    if(task) newOrder.push(task);
+  });
+  tasks = newOrder;
+  saveTasks();
+}
+
+//保存関数
+function saveTasks(){
+  updateTotalTime();
+  updateRealTotalTime();
+  localStorage.setItem("myTasks", JSON.stringify(tasks));
+}
+
+//時間の色を変える関数
+function formatTitle(title){
+  const match = title.match(/^(\d{1,2}:\d{2})\s*(.*)/);
+  if(match){
+    return `<strong>${match[1]}</strong> ${match[2]}`;
+  }
+  return title;
+}
+
+//全削除ボタン
+document.getElementById("clearAll").addEventListener("click", () => {
+  localStorage.removeItem("myTasks");
+  tasks.length = 0;
+  taskList.innerHTML = "";
+  updateTotalTime();
+  updateRealTotalTime();
+  new Audio("sounds/alarm_allReset.mp3").play();
+});
+
+// JSON読み込み
+document.getElementById("importJson").addEventListener("click", () => {
+  const text = document.getElementById("jsonInput").value;
+  try {
+    const importedTask = JSON.parse(text);
+    importedTask.forEach(importedTask => {
+      if(!importedTask.id){
+         importedTask.id = crypto.randomUUID();
+      }
+      createTask(importedTask);
+      new Audio("sounds/alarm_add.mp3").play();
+    });
+  } catch(e) {
+    alert("JSONの形式が正しくありません");
+  }
+});
+
+//タスクの合計時間表示
+function updateTotalTime(){
+  let total = 0;
+  tasks.forEach(task => {
+    total += task.minutes;
+  });
+  document.getElementById("estTotalTime").textContent = `今日の予定作業時間: ${total}分`;
+}
+
+//実質的な作業時間の表示
+function updateRealTotalTime(){
+  let total = 0;
+  tasks.forEach(task => {
+    if(task.done) {
+      total += task.minutes;
+    }
+  });
+  document.getElementById("realTotalTime").textContent = `今日の実質作業時間: ${total}分`;
+}
+
+
+
+//ページ読み込み時に復元（一番下に書くように）
+window.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("myTasks");
+  if(saved){
+    tasks.length = 0;
+    tasks.push(...JSON.parse(saved));
+    tasks.forEach(task => {
+      createTask(task, false);
+    });
+  }
+  //ページ読み込み時に通知許可
+  if("Notification" in window) {
+    Notification.requestPermission();
+  }
+});
+  </script>
+</body>
+</html>
 
