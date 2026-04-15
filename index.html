@@ -5,12 +5,13 @@
   <link rel="manifest" href="manifest.json">
   <title>TODO SCHEDULER v1.0</title>
   <style>
-    body { font-family: sans-serif; margin:0; padding: 0px; padding-bottom: 60px;max-width: 500px; }
-    .task { margin-left: 5px; padding: 5px; border-radius: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display:flex; align-items: center;}
-    .tasktitle{ padding: 0px 5px 5px 5px;font-size: 16px; flex:1; white-space:nowrap; overflow:hidden; text-overflow: ellipsis; max-width: 200px;font-weight: bold;}
-    .tasktitleminute{ font-size: 16px; font-weight: bold;}
+    body { font-family: sans-serif; margin:0; padding: 0; max-width: 500px; }
+    .task { margin-left: 5px;padding: 5px; border-radius: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display:flex; align-items: center;}
+    .tasktitle{ padding: 0px 5px 5px 5px;font-size: 15px; flex:1; white-space:nowrap; overflow:hidden; text-overflow: ellipsis; max-width: 250px;font-weight: bold;}
+    .tasktitleminute{ font-size: 10px; font-weight: bold;}
     .right { display: flex; gap: 8px;margin-left: auto; align-items: center;}
     .taskbtn{ font-size: 15px; color: #fff; margin-left: 5px; padding:5px 8px; border-radius: 5px; background-color: #ff3f3f;cursor: pointer;}
+    .deleteTaskbtn{ font-weight: bold; font-size: 15px; color: #fff; margin-left: 5px; padding:5px 8px; border-radius: 5px; background-color: #ff3f3f;cursor: pointer;}
     .handlebtn{ font-size: 20px;  margin-left: 5px; padding:8px 12px; border-radius: 5px; cursor: pointer; margin-left: auto;font-weight: bold;}
     .doing { border-left:20px solid #ff3f3f;}
     .done { background-color: #ddd;}
@@ -20,13 +21,16 @@
     input { font-size: 16px;}
     #inputArea { 
       position: fixed; 
-      bottom: 0;
+      top: 0px;
       left: 0;
       right: 0;
       background: white;
       padding: 10px;
-      border-top: 1px solid #ccc;
+      padding-bottom: 60px;
+      border-bottom: 1px solid #ccc;
       height: 40px;
+      text-align: center;
+      opacity: 0.9;
      }
   </style>
 </head>
@@ -34,7 +38,13 @@
 
 </script>
 <body style="margin:0;padding:0px;">
-  <h2 style="margin:0;padding:10px; color:white;background-color: #ff3f3f;">今日のタスク</h2>
+  
+<div id="inputArea">
+  <h2 style="margin:0px 0px 10px 0px;padding:10px; color:white;background-color: #ff3f3f;">今日のタスク</h2>
+  <input type="text" id="newTitle" placeholder="タスク名">
+  <input type="number" id="newMinutes" placeholder="分" min="1" style="width: 50px;">
+  <span id="addTask" class="taskbtn">追加</span>
+</div>
 <br>
 
 <!--textarea id="jsonInput" rows="3" placeholder="JSON"></textarea>
@@ -46,17 +56,12 @@
 <div id="estTotalTime">今日の予定作業時間: 0分</div><div id="realTotalTime">今日の実質作業時間: 0分</div-->
 <!--button id="clearAll">全削除</button-->
 
-<hr>
-
-<div id="taskList" style=" padding-bottom: 70px;"></div>
 
 
+<div id="taskList" style=" padding-top: 100px;"></div>
 
-<div id="inputArea">
-<input type="text" id="newTitle" placeholder="タスク名">
-<input type="number" id="newMinutes" placeholder="分" min="1" style="width: 50px;">
-<span id="addTask" class="taskbtn">追加</span>
-</div>
+
+
 
 <script>
   new Sortable(document.getElementById("taskList"), {
@@ -102,7 +107,7 @@ function createTask(task, save = true) {
     <span class="tasktitle">${formatTitle(task.title)}</span>
     <div class="right">
     <span class="tasktitleminute">（${task.minutes}分）</span>
-    <span class="taskbtn">×</span>
+    <span class="deleteTaskbtn">×</span>
     <span class="taskbtn">▶0:00</span>
     <span class="handle handlebtn">☰</span>
     </div>
